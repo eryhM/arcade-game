@@ -21,6 +21,8 @@ var playerSprites =
 	'images/char-princess-girl.png'
 ];
 
+var score = 0;
+
 // Objects
 // Enemy Object
 var Enemy = function(row, speed) {
@@ -106,6 +108,7 @@ function checkCollisions() {
 		{
 			setTimeout(function() {
 				player.reset();
+				updateScore(false);
 			}, 100);
 		}
 	}
@@ -120,7 +123,20 @@ function getRandomSpeed() {
 
 function win() {
 	player.reset();
-	alert('You win!');
+	updateScore(true);
+}
+
+function updateScore(increment) {
+	if(increment)
+		score++;
+	else
+		score--;
+
+	if(score < 0)
+		score = 0; // Score cannot go below 0
+
+	var el = document.getElementById('score');
+	el.innerHTML = 'Your score: ' + score;
 }
 
 // Event listeners
