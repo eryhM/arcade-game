@@ -1,34 +1,51 @@
-// Enemies our player must avoid
-var Enemy = function(row, speed) {
-	// Variables applied to each of our instances go here,
-	// we've provided one for you to get started
+// Variables
+// Map size
+var mapRows = 7,
+	mapColumns = 5;
 
-	// The image/sprite for our enemies, this uses
-	// a helper we've provided to easily load images
+// Rows where enemies roam
+var enemyRows =
+{
+	1: 0,
+	2: 1,
+	4: 2,
+	5: 3
+};
+
+var playerSprites =
+[
+	'images/char-boy.png',
+	'images/char-cat-girl.png',
+	'images/char-horn-girl.png',
+	'images/char-pink-girl.png',
+	'images/char-princess-girl.png'
+];
+
+// Objects
+// Enemy Object
+var Enemy = function(row, speed) {
 	this.sprite = 'images/enemy-bug.png';
 	this.speed = speed;
-	this.x = 0;
+	this.x = -1; // Spawn offscreen
 	this.y = row;
 };
 
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
 Enemy.prototype.update = function(dt) {
-	// You should multiply any movement by the dt parameter
-	// which will ensure the game runs at the same speed for
-	// all computers.
+	this.x += dt * this.speed; // Enemy moves to the right
 
-	// if(Math.floor(this.x) >= 4)
-	// 	Remove bug and generate a new one at the same row, with different speed
-
-	// this.x += dt * this.speed;
+	// Enemy is fully offscreen again, teleport it back and randomize its speed
+	if(Math.floor(this.x) >= mapColumns)
+	{
+		this.x = -1;
+		this.speed = getRandomSpeed();
+	}
 };
 
-// Draw the enemy on the screen, required method for game
 Enemy.prototype.render = function() {
 	ctx.drawImage(Resources.get(this.sprite), getTrueCoordinate('x', this.x), getTrueCoordinate('y', this.y));
 };
 
+// Returns precise pixel coordinates on the canvas based on row or column value
 function getTrueCoordinate(c, v) {
 	if(c === 'x')
 		return v * 101;
@@ -36,25 +53,23 @@ function getTrueCoordinate(c, v) {
 		return -34 + (v * 82);
 }
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
+// Player Object
 var Player = function() {
-	this.sprite = allPlayers[Math.floor(Math.random() * allPlayers.length)]; // Random character from a list of character images
+	this.sprite = playerSprites[Math.floor(Math.random() * playerSprites.length)]; // Randomized sprite
 	this.x = 2;
-	this.y = 5;
+	this.y = 6;
 };
 
 Player.prototype.update = function(dt) {
-	// Check for collisions with enemy class
+	checkCollisions();
 }
 
-Player.prototype.render = Enemy.prototype.render; // Same rendering method as the Enemy class
+// Same render logic
+Player.prototype.render = Enemy.prototype.render;
 
-// Teleports player back to start
 Player.prototype.reset = function() {
 	this.x = 2;
-	this.y = 5;
+	this.y = 6;
 }
 
 Player.prototype.handleInput = function(key) {
@@ -71,48 +86,44 @@ Player.prototype.handleInput = function(key) {
 				this.x--;
 			break;
 		case 'right':
-			if((this.x + 1) <= 4)
+			if((this.x + 1) < mapColumns)
 				this.x++;
 			break;
 		case 'down':
-			if((this.y + 1) <= 5)
+			if((this.y + 1) < mapRows)
 				this.y++;
 			break;
 	}
 }
 
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
-var allPlayers =
-	[
-		'images/char-boy.png',
-		'images/char-cat-girl.png',
-		'images/char-horn-girl.png',
-		'images/char-pink-girl.png',
-		'images/char-princess-girl.png'
-	];
-
-var allEnemies = [];
-
-// Geerate three enemies to add to row 1, 2, and 3.
-for(var i = 1; i < 4; i++) {
-	allEnemies.push(new Enemy(i, getRandomSpeed()));
+// Gameplay Functions
+function checkCollisions() {
+	// Player has to be on the road (rows where bugs roam)
+	if(enemyRows[player.y] !== undefined)
+	{
+		var distance = player.x - allEnemies[enemyRows[player.y]].x;
+		if(distance >= -0.6 && distance <= 0.6)
+		{
+			setTimeout(function() {
+				player.reset();
+			}, 100);
+		}
+	}
 }
 
 function getRandomSpeed() {
-	return Math.round((Math.random() * (2.5 - 1) + 1));
-}
+	var min = 1.5,
+		max = 4;
 
-var player = new Player();
+	return Math.random() * (max - min) + min;
+}
 
 function win() {
-	console.log('You win!');
 	player.reset();
+	alert('You win!');
 }
 
-// This listens for key presses and sends the keys to your
-// Player.handleInput() method. You don't need to modify this.
+// Event listeners
 document.addEventListener('keyup', function(e) {
 	var allowedKeys = {
 		37: 'left',
@@ -123,3 +134,15 @@ document.addEventListener('keyup', function(e) {
 
 	player.handleInput(allowedKeys[e.keyCode]);
 });
+
+// Instancing
+// Enemy
+var allEnemies = [];
+
+// Generate 4 enemies with randomized speed
+for(var i = 0; i < Object.keys(enemyRows).length; i++) {
+	allEnemies.push(new Enemy(Object.keys(enemyRows)[i], getRandomSpeed()));
+}
+
+// Player
+var player = new Player();
