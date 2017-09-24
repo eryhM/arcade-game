@@ -1,11 +1,17 @@
 # Arcade Game Clone
 
 This is a clone of a classic arcade game (Frogger), as part of Udacity's Front-End Nanodegree (FEND).
+The player spawns at the bottom of the map, on grass. The objective is to reach the water at the top of the map.
+Be careful, though! Enemy bugs are roaming the road at various speeds and will not stop for you!
 
 ### How to play
 ---
-The player spawns at the bottom of the map, on grass. The objective is to reach the water at the top of the map.
-Beware! Enemy bugs are roaming the road at various speeds. Using the arrow keys, move in all four directions to avoid the enemies, cross the road and reach freedom!
+Use the arrow keys to move in all four directions across the map and avoid the enemies.
+
+### Installation
+---
+Download a copy of this repository. Then, simply load (open) the 'index.html' file in your browser and play!
+Alternatively, you can also play the game on the Github page [here](https://eryhm.github.io/arcade-game/).
 
 ### License
 ---
