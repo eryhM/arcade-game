@@ -1,7 +1,8 @@
+'use strict';
+
 // Variables
-// Map size
-var mapRows = 7,
-	mapColumns = 5;
+var MAP_ROWS = 7,
+	MAP_COLUMNS = 5;
 
 // Rows where enemies roam
 var enemyRows =
@@ -21,32 +22,6 @@ var playerSprites =
 	'images/char-princess-girl.png'
 ];
 
-var score = 0;
-
-// Objects
-// Enemy Object
-var Enemy = function(row, speed) {
-	this.sprite = 'images/enemy-bug.png';
-	this.speed = speed;
-	this.x = -1; // Spawn offscreen
-	this.y = row;
-};
-
-Enemy.prototype.update = function(dt) {
-	this.x += dt * this.speed; // Enemy moves to the right
-
-	// Enemy is fully offscreen again, teleport it back and randomize its speed
-	if(Math.floor(this.x) >= mapColumns)
-	{
-		this.x = -1;
-		this.speed = getRandomSpeed();
-	}
-};
-
-Enemy.prototype.render = function() {
-	ctx.drawImage(Resources.get(this.sprite), getTrueCoordinate('x', this.x), getTrueCoordinate('y', this.y));
-};
-
 // Returns precise pixel coordinates on the canvas based on row or column value
 function getTrueCoordinate(c, v) {
 	if(c === 'x')
@@ -55,16 +30,47 @@ function getTrueCoordinate(c, v) {
 		return -34 + (v * 82);
 }
 
+// Objects
+// Enemy Object
+var Enemy = function(row) {
+	this.sprite = 'images/enemy-bug.png';
+	this.x = -1; // Spawn offscreen
+	this.y = row;
+	this.speed = this.getRandomSpeed();
+};
+
+Enemy.prototype.update = function(dt) {
+	this.x += dt * this.speed; // Enemy moves to the right
+
+	// Enemy is fully offscreen again, teleport it back and randomize its speed
+	if(Math.floor(this.x) >= MAP_COLUMNS) {
+		this.x = -1;
+		this.speed = this.getRandomSpeed();
+	}
+};
+
+Enemy.prototype.render = function() {
+	ctx.drawImage(Resources.get(this.sprite), getTrueCoordinate('x', this.x), getTrueCoordinate('y', this.y));
+};
+
+Enemy.prototype.getRandomSpeed = function() {
+	var min = 1.5,
+		max = 4;
+
+	return Math.random() * (max - min) + min;
+};
+
 // Player Object
 var Player = function() {
 	this.sprite = playerSprites[Math.floor(Math.random() * playerSprites.length)]; // Randomized sprite
 	this.x = 2;
 	this.y = 6;
+	this.score = 0;
 };
 
 Player.prototype.update = function(dt) {
-	checkCollisions();
-}
+	this.checkCollisions();
+};
 
 // Same render logic
 Player.prototype.render = Enemy.prototype.render;
@@ -72,7 +78,7 @@ Player.prototype.render = Enemy.prototype.render;
 Player.prototype.reset = function() {
 	this.x = 2;
 	this.y = 6;
-}
+};
 
 Player.prototype.handleInput = function(key) {
 	switch(key)
@@ -81,63 +87,51 @@ Player.prototype.handleInput = function(key) {
 			if((this.y - 1) > 0)
 				this.y--;
 			else
-				win(); // Player has reached the water!
+				this.win(); // Player has reached the water!
 			break;
 		case 'left':
 			if((this.x - 1) >= 0)
 				this.x--;
 			break;
 		case 'right':
-			if((this.x + 1) < mapColumns)
+			if((this.x + 1) < MAP_COLUMNS)
 				this.x++;
 			break;
 		case 'down':
-			if((this.y + 1) < mapRows)
+			if((this.y + 1) < MAP_ROWS)
 				this.y++;
 			break;
 	}
-}
+};
 
-// Gameplay Functions
-function checkCollisions() {
+Player.prototype.checkCollisions = function() {
 	// Player has to be on the road (rows where bugs roam)
-	if(enemyRows[player.y] !== undefined)
-	{
+	if(enemyRows[player.y] !== undefined) {
 		var distance = player.x - allEnemies[enemyRows[player.y]].x;
-		if(distance >= -0.6 && distance <= 0.6)
-		{
+
+		if(distance >= -0.6 && distance <= 0.6) {
 			setTimeout(function() {
 				player.reset();
-				updateScore(false);
+				player.updateScore(false);
 			}, 100);
 		}
 	}
-}
+};
 
-function getRandomSpeed() {
-	var min = 1.5,
-		max = 4;
+Player.prototype.win = function() {
+	this.reset();
+	this.updateScore(true);
+};
 
-	return Math.random() * (max - min) + min;
-}
-
-function win() {
-	player.reset();
-	updateScore(true);
-}
-
-function updateScore(increment) {
+Player.prototype.updateScore = function(increment) {
 	if(increment)
-		score++;
+		this.score++;
 	else
-		score--;
-
-	if(score < 0)
-		score = 0; // Score cannot go below 0
+		this.score = 0;
 
 	var el = document.getElementById('score');
-	el.innerHTML = 'Your score: ' + score;
-}
+	el.innerHTML = 'Your score: ' + this.score;
+};
 
 // Event listeners
 document.addEventListener('keyup', function(e) {
@@ -157,7 +151,7 @@ var allEnemies = [];
 
 // Generate 4 enemies with randomized speed
 for(var i = 0; i < Object.keys(enemyRows).length; i++) {
-	allEnemies.push(new Enemy(Object.keys(enemyRows)[i], getRandomSpeed()));
+	allEnemies.push(new Enemy(Object.keys(enemyRows)[i]));
 }
 
 // Player
